@@ -1,1 +1,1 @@
-wrtie: / 'Hello World'
+write: / 'Hello World'
