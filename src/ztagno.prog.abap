@@ -16,18 +16,8 @@ SELECT vbeln, posnr, kwmeng FROM vbap
   WHERE vbeln IN @svbeln
   AND posnr IN @sposnr.
 
-TYPES: BEGIN OF ty_conf_vbap,
-         conf TYPE REF TO zcl_pdm_obj_conf_vbap,
-       END OF ty_conf_vbap.
-DATA t_conf_vbap TYPE STANDARD TABLE OF ty_conf_vbap WITH EMPTY KEY.
-TYPES: BEGIN OF ty_display,
-         vbeln      TYPE vbeln,
-         posnr      TYPE posnr,
-         quantity   TYPE kwmeng,
-         tag_count  TYPE i,
-         tag_number TYPE char30,
-       END OF ty_display.
-DATA t_display TYPE STANDARD TABLE OF ty_display.
+DATA t_conf_vbap TYPE STANDARD TABLE OF zcl_tagno=>ty_conf_vbap WITH EMPTY KEY.
+DATA t_display TYPE STANDARD TABLE OF zcl_tagno=>ty_display.
 DATA tag_numbers TYPE STANDARD TABLE OF atwrt.
 
 t_conf_vbap = VALUE #( FOR <fs> IN positions ( conf = zcl_pdm_obj_conf_vbap=>create(
@@ -46,12 +36,13 @@ LOOP AT positions REFERENCE INTO DATA(position).
         IF char->get_name( ) CP 'KENNZ_1_*'.
           LOOP AT char->get_value_list( ) INTO DATA(value).
             IF value IS BOUND.
-              DATA d_line TYPE ty_display.
-              d_line-vbeln = position->vbeln.
-              d_line-posnr = position->posnr.
-              d_line-quantity = position->kwmeng.
-              d_line-tag_count = count.
-              d_line-tag_number = value->get_value_as_text( ).
+              DATA(d_line) = zcl_tagno=>create_display_line_from_data(
+                   vbeln        = position->vbeln
+                   posnr        = position->posnr
+                   quantity     = position->kwmeng
+                   tag_count    = count
+                   char_value   = value
+               ).
               APPEND d_line TO t_display.
               ADD 1 TO count.
             ENDIF.
